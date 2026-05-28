@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace AlasLauncher
 {
@@ -40,6 +41,8 @@ namespace AlasLauncher
                 return 1;
             }
 
+            DisableElectronUpdater(root);
+
             Process.Start(new ProcessStartInfo
             {
                 FileName = webapp,
@@ -61,6 +64,74 @@ namespace AlasLauncher
                 process.WaitForExit();
                 return process.ExitCode;
             }
+        }
+
+        private static void DisableElectronUpdater(string root)
+        {
+            string appAsar = Path.Combine(root, "toolkit", "webapp", "resources", "app.asar");
+            if (!File.Exists(appAsar))
+            {
+                return;
+            }
+
+            byte[] content = File.ReadAllBytes(appAsar);
+
+            bool patched = false;
+            patched |= ReplaceInPlace(
+                content,
+                "autoUpdater.checkForUpdatesAndNotify()",
+                "Promise.resolve()" + new string(' ', 21));
+            patched |= ReplaceInPlace(
+                content,
+                "e.checkForUpdatesAndNotify()",
+                "Promise.resolve()" + new string(' ', 11));
+
+            if (!patched)
+            {
+                return;
+            }
+
+            File.WriteAllBytes(appAsar, content);
+            Console.WriteLine("Electron updater disabled");
+        }
+
+        private static bool ReplaceInPlace(byte[] content, string searchText, string replaceText)
+        {
+            byte[] search = Encoding.UTF8.GetBytes(searchText);
+            byte[] replace = Encoding.UTF8.GetBytes(replaceText);
+            if (search.Length != replace.Length)
+            {
+                throw new InvalidOperationException("Replacement must preserve byte length");
+            }
+
+            int index = IndexOf(content, search);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            Buffer.BlockCopy(replace, 0, content, index, replace.Length);
+            return true;
+        }
+
+        private static int IndexOf(byte[] content, byte[] search)
+        {
+            for (int i = 0; i <= content.Length - search.Length; i++)
+            {
+                int j = 0;
+                for (; j < search.Length; j++)
+                {
+                    if (content[i + j] != search[j])
+                    {
+                        break;
+                    }
+                }
+                if (j == search.Length)
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
     }
 }
