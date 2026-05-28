@@ -164,6 +164,7 @@ class AzurLaneAutoScript:
 
     def restart(self):
         logger.info('Restart skipped')
+        self.config.task_delay(server_update=True)
         # from module.handler.login import LoginHandler
         # LoginHandler(self.config, device=self.device).app_restart()
 
