@@ -43,7 +43,7 @@ namespace AlasLauncher
             Process.Start(new ProcessStartInfo
             {
                 FileName = webapp,
-                WorkingDirectory = Path.GetDirectoryName(webapp)
+                WorkingDirectory = root
             });
             return 0;
         }
