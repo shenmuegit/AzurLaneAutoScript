@@ -163,8 +163,9 @@ class AzurLaneAutoScript:
                 f.writelines(lines)
 
     def restart(self):
-        from module.handler.login import LoginHandler
-        LoginHandler(self.config, device=self.device).app_restart()
+        logger.info('Restart skipped')
+        # from module.handler.login import LoginHandler
+        # LoginHandler(self.config, device=self.device).app_restart()
 
     def start(self):
         from module.handler.login import LoginHandler
